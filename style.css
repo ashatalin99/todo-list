@@ -31,10 +31,10 @@ h1 {
     border-right: none;
     padding: 5px;
     border-radius: 4px 0 0 4px;
-    width: 80%;
+    flex: 1;
 }
 
-.add_button {
+.add_button,.clear_button {
     background: #32955C;
     color: white;
     border-radius: 4px;
@@ -43,32 +43,52 @@ h1 {
     padding: 10px 20px;
 }
 
+.clear_button {
+    background: red;
+    margin-left: 10px;
+}
+
 .warning {
     color: red;
+}
+
+.success {
+    color: #32955C;
+}
+
+.alert_message {
+    height: 40px;
     text-align: center;
 }
 
-.list_container {
-    margin: 0 38px;
+.list_container ul {
+    margin: 0;
     padding: 0;
-    border: 1px solid #D9D8D9;
+    /* border: 1px solid #D9D8D9; */
     border-radius: 4px;
     list-style-type: none;
 
 }
 
+.list_container li:first-of-type {
+    border-top: 1px solid #D9D8D9;
+}
+
 .list_container li {
     margin: 0;
     padding: 10px;
+    border-radius: 4px;
+    border-left: 1px solid #D9D8D9;
+    border-right: 1px solid #D9D8D9;
     border-bottom: 1px solid #D9D8D9;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-.list_container li:last-of-type {
+/* .list_container li:last-of-type {
     border: none;
-}
+} */
 
 .close {
     border: none;

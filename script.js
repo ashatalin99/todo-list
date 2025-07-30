@@ -1,107 +1,141 @@
-function TodoList() {
-    this.list = JSON.parse(localStorage.getItem('items')) || [];
-
-    this.createItem = function(item) {
-        const sanitizedValue = item.trim();
-        this.list.push(sanitizedValue);
-        return this.list.length > 0 ? {success:`${sanitizedValue} has been saved!`} : {error: `Todo list is empty. Item has not been saved.`};
+class TodoList {
+    constructor(containerSelector, listSelector) {
+        this.container = document.querySelector(containerSelector);
+        this.list = JSON.parse(localStorage.getItem('items')) || [];
+        this.render();
     }
 
-    this.saveItem = function() {
-        console.log('item saved in the list');
-        const uniqueItems = [... new Set(this.list)];
-        localStorage.setItem('items', JSON.stringify(uniqueItems));
-        this.renderItems();
+    add(item) {
+        const value = item.trim();
+        if (value.length < 3) {
+            this.showAlert('Cannot be empty or less than 3 chars');
+            return false;
+        }
+        if (this.list.includes(value)) {
+            this.showAlert('Duplicate item');
+            return false;
+        }
+        this.list.push(value);
+        this.save();
+        this.render();
+        this.showAlert(`${value} has been saved!`, true);
+        return true;
     }
 
-    this.deleteItem = function(item) {
+    save() {
+        localStorage.setItem('items', JSON.stringify(this.list));
+    }
+
+    remove(item) {
         const itemIndex = this.list.indexOf(item);
         if (itemIndex !== -1) {
-            this.list.splice(itemIndex, 1); 
-            localStorage.setItem('items', JSON.stringify(this.list));
-            this.renderItems();
+            this.list.splice(itemIndex, 1);
+            this.save();
+            this.render();
+            this.showAlert(`"${item}" removed.`, true);
         }
     }
 
-    this.deleteAllItems = function() {
-        localStorage.clear();
+    clear = function() {
+        this.list.length = 0;
+        localStorage.removeItem('items');
+        this.render();
+        this.showAlert('All items cleared.', true);
     }
 
-    this.renderItems = function() {
+    render() {
         const listContainer = document.querySelector('.list_container');
+
         listContainer.innerHTML = '';
-        const list = this.list.slice().reverse().map(item => {
+        const ul = document.createElement('ul');
+        
+        this.list.slice().reverse().forEach(item => {
             const li = document.createElement('li');
-            const button = document.createElement('button');
-            button.classList.add('close');
             li.textContent = item;
-            li.append(button)
-            return li.outerHTML
-        }).join("");
-        listContainer.innerHTML = list;
-        const buttons = document.querySelectorAll('.close');
-        buttons.forEach((btn, index) => {
-            btn.addEventListener("click", (e) => {
-                const item = e.target.parentNode;
-                this.deleteItem(item.textContent);
-                item.remove();
-            });
+            li.setAttribute('data-value', item);
+
+            const btn = document.createElement('button');
+            btn.className = 'close';
+            btn.onclick = () => this.remove(item);
+
+            li.append(btn);
+            ul.append(li);
         });
+
+        listContainer.append(ul);
+    }
+
+    showAlert(message, success = false) {
+        let alertDiv = document.getElementById('alertMessage');
+        if (!alertDiv) {
+            alertDiv = document.createElement('div');
+            alertDiv.id = 'alertMessage';
+            this.container.prepend(alertDiv);
+        }
+        alertDiv.textContent = message;
+        alertDiv.className = success ? 'alert_message success' : 'alert_message warning';
+        setTimeout(() => { alertDiv.textContent = ""; }, 2000);
     }
     
 }
 
-let todoList = new TodoList(); 
-
-function titleComponent(titleName = 'To-Do List') {
-    const app = document.getElementById('App');
+function titleComponent(title = 'To-Do List', appSelector = '#App') {
+    const app = document.querySelector(appSelector);
     const h1 = document.createElement('h1');
-    h1.textContent = titleName;
-    const alertContainer = document.createElement('div');
-    alertContainer.setAttribute('id', 'alertMessage')
-    alertContainer.classList.add('warning');
+    h1.textContent = title;
     app.append(h1);
-    app.append(alertContainer);
+    const alertDiv = document.createElement('div');
+    alertDiv.id = 'alertMessage';
+    alertDiv.className = 'alert_message';
+    app.append(alertDiv);
 }
 
-function inputComponent() {
-    const app = document.getElementById('App');
+function inputComponent(todoListInstance, appSelector = '#App') {
+    const app = document.querySelector(appSelector);
     const inputContainer = document.createElement('div');
-    inputContainer.classList.add('add_task_container');
-    
-    const inputField = document.createElement('input');
-    inputField.setAttribute('type', 'text');
-    inputField.setAttribute('id', 'addTask');
+    inputContainer.className = 'add_task_container';
 
-    const button = document.createElement('button')
-    button.classList.add('add_button');
-    button.textContent = 'Add'
-    button.addEventListener('click', () => {
-        if (inputField.value.length !== '' && inputField.value.length > 3) {
-            todoList.createItem(inputField.value);
-            todoList.saveItem();
-            todoList.renderItems();
-            inputField.value = '';
-        } else {
-            document.getElementById('alertMessage').textContent = 'Cannot be empty or less than 3 chars or the same value';
-        }
-    })
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = 'addTask';
+    input.placeholder = 'Enter your task...';
 
-    inputContainer.append(inputField);
-    inputContainer.append(button);
-    
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add_button';
+    addBtn.textContent = 'Add';
+
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'clear_button';
+    clearBtn.textContent = 'Clear All';
+
+    inputContainer.append(input, addBtn, clearBtn);
     app.append(inputContainer);
 }
 
-function renderList() {
-    const app = document.getElementById('App');
-    const listContainer = document.createElement('ul');
-    listContainer.classList.add('list_container');
-    app.append(listContainer);
-    todoList.renderItems();
+function listComponent(appSelector = '#App') {
+    const app = document.querySelector(appSelector);
+    const list = document.createElement('div');
+    list.className = 'list_container';
+    app.append(list);
 }
 
 
-titleComponent()
-inputComponent()
-renderList()
+function mountTodoApp() {
+    titleComponent('To-Do List');
+    inputComponent(null);
+    listComponent();
+
+    window.todoList = new TodoList('#App');
+    const input = document.getElementById('addTask');
+    const addBtn = document.querySelector('.add_button');
+    const clearBtn = document.querySelector('.clear_button');
+    addBtn.onclick = () => {
+        if (window.todoList.add(input.value)) {
+            input.value = '';
+        }
+    };
+    clearBtn.onclick = () => window.todoList.clear();
+}
+
+
+mountTodoApp();
