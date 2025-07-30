@@ -1,5 +1,5 @@
 class TodoList {
-    constructor(containerSelector, listSelector) {
+    constructor(containerSelector) {
         this.container = document.querySelector(containerSelector);
         this.list = JSON.parse(localStorage.getItem('items')) || [];
         this.render();
